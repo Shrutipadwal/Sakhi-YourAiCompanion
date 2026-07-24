@@ -1,58 +1,107 @@
-Sakhi – A Calm AI Companion
+# 🌸 Sakhi – Your AI Companion
 
-Short description:
-Sakhi is a compassionate AI companion web app designed to support users through calm, human-like conversation. It combines voice interaction, memory-based personalization, and guided check-ins to create a warm and supportive experience.
+Sakhi is a calm and compassionate AI companion that provides emotional support, meaningful conversations, and personalized guidance. It combines AI chat, voice interaction, and memory-based personalization to create a warm and human-like experience.
 
-Main features:
-- Voice conversation experience
-- Female voice support with a calm and gentle speaking style
-- Voice input for speaking naturally instead of typing
-- AI chat for emotional support, guidance, and everyday conversation
-- Memory-based personalization so Sakhi remembers user preferences and context
-- My Journey section to reflect growth and personal progress
-- Daily check-in prompts for emotional wellness
-- Firebase authentication for secure login and user accounts
-- Conversation history and chat management
+## 🚀 Live Demo
 
-Technologies used:
+🔗 **Demo:** https://sakhi-youraicompanion.netlify.app
+
+---
+
+## ✨ Features
+
+- 💬 AI-powered conversations
+- 🎙️ Voice input for natural conversations
+- 🔊 Calm female voice responses
+- 🧠 Memory-based personalization
+- 📖 My Journey for personal growth tracking
+- ❤️ Daily emotional check-ins
+- 🔐 Secure Google Authentication with Firebase
+- 📝 Conversation history and chat management
+
+---
+
+## 🛠️ Tech Stack
+
 - React
 - Vite
-- JavaScript / JSX
+- JavaScript (JSX)
 - Firebase Authentication
-- Firestore
-- Speech Recognition API
+- Firestore Database
+- Web Speech Recognition API
 - Speech Synthesis API
 - React Router
 
-How it works:
-1. Users sign up or log in securely.
-2. They can start a conversation with Sakhi through text or voice.
-3. Sakhi responds with a calm, supportive tone.
-4. Voice input lets users speak naturally.
-5. The app stores conversation history and memory to personalize future replies.
-6. Daily check-ins and journey tracking help create a more meaningful experience.
+---
 
-Why Sakhi is valuable:
-- It offers a gentle and supportive AI experience.
-- It helps people feel heard and encouraged.
-- It combines conversation, voice, memory, and reflection in one place.
-- It is useful for emotional support, motivation, journaling-like interaction, and personal growth.
+## ⚙️ How It Works
 
-Suggested sections for your README:
-- Project Overview
-- Features
-- Tech Stack
-- How It Works
-- Why It’s Useful
-- Getting Started
-- Installation
-- Future Improvements
+1. Sign in securely using Firebase Authentication.
+2. Start chatting with Sakhi using text or voice.
+3. Receive calm, supportive AI responses.
+4. Sakhi remembers important user preferences for personalized conversations.
+5. View previous conversations and continue your personal journey.
 
-Good things you can recommend adding later:
-- Add a screenshot section
-- Add a demo link
-- Add setup instructions for Firebase environment variables
-- Add a “How to run locally” section
-- Add a roadmap section with future ideas like mood tracking, reminders, or meditation support
+---
 
-If you want, I can next help you write a polished full README content in ready-to-paste format.
+## 💙 Why Sakhi?
+
+Sakhi is designed to create a supportive AI experience that helps users feel heard, motivated, and understood. By combining voice interaction, AI conversations, and personalized memory, it encourages reflection, emotional well-being, and personal growth.
+
+---
+
+## 🚀 Getting Started
+
+### Clone the repository
+
+```bash
+git clone https://github.com/your-username/sakhi.git
+cd sakhi
+```
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Create a `.env` file
+
+Add your Firebase configuration and other required environment variables.
+
+```env
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
+
+### Run locally
+
+```bash
+npm run dev
+```
+
+---
+
+## 📌 Future Improvements
+
+- 😊 Mood tracking
+- 🧘 Guided meditation
+- ⏰ Smart reminders
+- 📊 Emotion insights dashboard
+- 📱 Mobile app support
+- 🌍 Multi-language support
+
+
+## 🤝 Contributing
+
+Contributions, suggestions, and feedback are always welcome.
+
+---
+
+## 📄 License
+
+This project is created for portfolio and educational purposes. All rights reserved.
