@@ -52,6 +52,7 @@ function Chat() {
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState("");
   const [voiceError, setVoiceError] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState("");
   const [latestReply, setLatestReply] = useState("");
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [lastCheckInDate, setLastCheckInDate] = useState(null);
@@ -59,6 +60,7 @@ function Chat() {
   const [checkInLoading, setCheckInLoading] = useState(true);
 
   const recognitionRef = useRef(null);
+  const listeningRef = useRef(false);
   const transcriptRef = useRef("");
   const chatEndRef = useRef(null);
 
@@ -117,6 +119,13 @@ function Chat() {
     }
 
     try {
+      if (recognitionRef.current && listeningRef.current) {
+        listeningRef.current = false;
+        setIsListening(false);
+        setVoiceStatus("");
+        recognitionRef.current.stop();
+      }
+
       synth.cancel();
       if (synth.paused) {
         synth.resume();
@@ -344,6 +353,27 @@ function Chat() {
     return () => window.clearTimeout(timer);
   }, [latestReply]);
 
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) {
+      return;
+    }
+
+    const handleSpeakingEnded = () => {
+      if (recognitionRef.current && !listeningRef.current) {
+        listeningRef.current = true;
+        setIsListening(true);
+        setVoiceStatus("I’m listening — speak now.");
+      }
+    };
+
+    window.speechSynthesis.onvoiceschanged = null;
+    window.speechSynthesis.addEventListener?.("end", handleSpeakingEnded);
+
+    return () => {
+      window.speechSynthesis.removeEventListener?.("end", handleSpeakingEnded);
+    };
+  }, []);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -355,10 +385,12 @@ function Chat() {
   };
 
   const stopListening = () => {
+    listeningRef.current = false;
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
     setIsListening(false);
+    setVoiceStatus("");
   };
 
   const startListening = () => {
@@ -370,17 +402,19 @@ function Chat() {
     }
 
     setVoiceError("");
+    setVoiceStatus("I’m listening — speak now.");
 
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.interimResults = true;
-    recognition.continuous = false;
+    recognition.continuous = true;
 
     recognition.onstart = () => {
       transcriptRef.current = draft.trim();
       listeningRef.current = true;
       setIsListening(true);
       setVoiceError("");
+      setVoiceStatus("I’m listening — speak now.");
     };
 
     recognition.onresult = (event) => {
@@ -388,6 +422,10 @@ function Chat() {
         .map((result) => result[0]?.transcript || "")
         .join(" ")
         .trim();
+
+      if (!spokenText) {
+        return;
+      }
 
       const nextMessage = [transcriptRef.current, spokenText]
         .filter(Boolean)
@@ -405,13 +443,15 @@ function Chat() {
       );
       listeningRef.current = false;
       setIsListening(false);
+      setVoiceStatus("");
     };
 
     recognition.onend = () => {
-      if (listeningRef.current) {
-        recognition.start();
+      if (listeningRef.current && recognitionRef.current) {
+        recognitionRef.current.start();
       } else {
         setIsListening(false);
+        setVoiceStatus("");
       }
     };
 
@@ -736,6 +776,8 @@ function Chat() {
               </button>
               {voiceError ? (
                 <span className="status-text warning">{voiceError}</span>
+              ) : voiceStatus ? (
+                <span className="status-text listening">{voiceStatus}</span>
               ) : !supportsVoiceInput ? (
                 <span className="status-text warning">
                   Voice works best in Chrome or Edge. If your browser doesn’t
