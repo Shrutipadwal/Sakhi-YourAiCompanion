@@ -13,10 +13,17 @@
   box-sizing: border-box;
 }
 
+html {
+  font-size: 16px;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   background:
     radial-gradient(circle at top left, rgba(255, 214, 204, 0.8), transparent 32%),
     radial-gradient(circle at bottom right, rgba(214, 233, 255, 0.65), transparent 28%),
@@ -366,6 +373,108 @@ textarea {
   }
 }
 
+@media (max-width: 768px) {
+  .page-shell {
+    padding: 14px 10px 20px;
+    align-items: flex-start;
+  }
+
+  .app-panel,
+  .chat-panel,
+  .sidebar,
+  .auth-card,
+  .journey-header,
+  .journey-card,
+  .checkin-card,
+  .composer {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .sidebar-header,
+  .top-bar,
+  .conversation-panel-header,
+  .composer-actions,
+  .composer-tools {
+    flex-wrap: wrap;
+  }
+
+  .top-bar {
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .top-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .title-group {
+    min-width: 0;
+  }
+
+  .conversation-panel-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .message-list {
+    max-height: min(48vh, 420px);
+  }
+
+  .message-bubble {
+    max-width: 95%;
+  }
+
+  .bubble-avatar {
+    min-width: 38px;
+    padding: 7px 8px;
+    font-size: 0.72rem;
+  }
+
+  .bubble-content {
+    padding: 11px 12px;
+    font-size: 0.96rem;
+  }
+
+  .landing-shell {
+    padding: 16px 12px;
+  }
+
+  .landing-grid {
+    gap: 20px;
+  }
+
+  .landing-copy {
+    gap: 16px;
+  }
+
+  .landing-hero-title {
+    font-size: clamp(1.65rem, 6vw, 2.25rem);
+  }
+
+  .landing-hero-copy p,
+  .landing-note {
+    font-size: 1rem;
+  }
+
+  .landing-pill-list {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-container {
+    padding: 16px 12px 24px;
+  }
+
+  .auth-card {
+    padding: 24px 18px;
+  }
+
+  .hint {
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+}
+
 .top-bar {
   display: flex;
   align-items: center;
@@ -482,6 +591,21 @@ h1 {
   box-shadow: 0 8px 24px rgba(146, 117, 100, 0.1);
   white-space: pre-wrap;
   word-break: break-word;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message-action-button {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #7a4338;
+  background: rgba(244, 199, 184, 0.45);
+  cursor: pointer;
 }
 
 .message-bubble.user .bubble-content {
@@ -849,13 +973,37 @@ h1 {
 }
 
 @media (max-width: 640px) {
-  .page-shell {
-    padding: 12px;
+  body {
+    font-size: 15px;
   }
 
-  .app-panel {
-    padding: 16px;
-    border-radius: 20px;
+  .page-shell {
+    padding: 10px;
+  }
+
+  .app-panel,
+  .chat-panel,
+  .sidebar,
+  .auth-card,
+  .journey-header,
+  .journey-card,
+  .checkin-card,
+  .composer {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .sidebar-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .new-chat-button {
+    width: 100%;
+  }
+
+  .conversation-item {
+    padding: 11px 12px;
   }
 
   .message-bubble {
@@ -865,11 +1013,40 @@ h1 {
   .composer-actions,
   .composer-tools {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
   .voice-button,
-  .send-button {
+  .send-button,
+  .logout-button,
+  .auth-button {
     width: 100%;
+  }
+
+  .top-actions {
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .user-chip {
+    width: 100%;
+    justify-content: center;
+  }
+
+  h1 {
+    font-size: clamp(1.3rem, 5vw, 1.7rem);
+  }
+
+  .checkin-header span {
+    font-size: 0.95rem;
+  }
+
+  .checkin-header p {
+    font-size: 0.92rem;
+  }
+
+  .message-input {
+    min-height: 88px;
+    padding: 12px;
   }
 }

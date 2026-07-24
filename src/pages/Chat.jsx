@@ -82,6 +82,55 @@ function Chat() {
     return "Good evening";
   };
 
+  const speakReply = (replyText) => {
+    if (!replyText || !("speechSynthesis" in window)) {
+      return;
+    }
+
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices ? synth.getVoices() : [];
+    const preferredVoice =
+      selectedVoice ||
+      voices.find((voice) =>
+        (voice.name || "").toLowerCase().includes("zira"),
+      ) ||
+      voices.find(
+        (voice) =>
+          (voice.name || "").toLowerCase().includes("samantha") ||
+          (voice.name || "").toLowerCase().includes("siri") ||
+          (voice.name || "").toLowerCase().includes("ava") ||
+          (voice.name || "").toLowerCase().includes("emma"),
+      ) ||
+      voices.find((voice) =>
+        (voice.lang || "").toLowerCase().startsWith("en"),
+      ) ||
+      null;
+
+    const utterance = new SpeechSynthesisUtterance(replyText);
+    utterance.lang = "en-US";
+    utterance.rate = 0.95;
+    utterance.pitch = 1.08;
+    utterance.volume = 0.95;
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    try {
+      synth.cancel();
+      if (synth.paused) {
+        synth.resume();
+      }
+      synth.speak(utterance);
+    } catch (speakError) {
+      console.error("Speech playback failed:", speakError);
+    }
+  };
+
+  const handlePlayAssistantReply = (replyText) => {
+    speakReply(replyText);
+  };
+
   const initializeCheckIn = async () => {
     if (!user?.uid) {
       setShowCheckInPrompt(false);
@@ -288,63 +337,12 @@ function Chat() {
       return;
     }
 
-    const selectFemaleVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const gentleFemaleVoice = voices.find((voice) => {
-        const voiceName = (voice.name || "").toLowerCase();
-        const voiceLang = (voice.lang || "").toLowerCase();
-        const isEnglish = voiceLang.startsWith("en");
-        return (
-          isEnglish &&
-          !voiceName.includes("child") &&
-          (voiceName.includes("female") ||
-            voiceName.includes("woman") ||
-            voiceName.includes("girl") ||
-            voiceName.includes("soul") ||
-            voiceName.includes("soft") ||
-            voiceName.includes("serene") ||
-            voiceName.includes("gentle") ||
-            voiceName.includes("calm") ||
-            voiceName.includes("luna") ||
-            voiceName.includes("bella") ||
-            voiceName.includes("maya") ||
-            voiceName.includes("sofia") ||
-            voiceName.includes("amelia") ||
-            voiceName.includes("olivia") ||
-            voiceName.includes("ava") ||
-            voiceName.includes("emma") ||
-            voiceName.includes("clara") ||
-            voiceName.includes("nina") ||
-            voiceName.includes("samantha") ||
-            voiceName.includes("victoria") ||
-            voiceName.includes("serena"))
-        );
-      });
-      const defaultFemale = voices.find((voice) =>
-        voice.name.toLowerCase().includes("female"),
-      );
-      const englishVoice = voices.find((voice) =>
-        voice.lang.toLowerCase().startsWith("en"),
-      );
-      return (
-        gentleFemaleVoice || defaultFemale || englishVoice || voices[0] || null
-      );
-    };
+    const timer = window.setTimeout(() => {
+      speakReply(latestReply);
+    }, 220);
 
-    const utterance = new SpeechSynthesisUtterance(latestReply);
-    utterance.rate = 0.92;
-    utterance.pitch = 1.12;
-    utterance.volume = 0.95;
-    utterance.text = latestReply;
-    const voice = selectedVoice || selectFemaleVoice();
-    if (voice) {
-      utterance.voice = voice;
-      setSelectedVoice(voice);
-    }
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }, [latestReply, selectedVoice]);
+    return () => window.clearTimeout(timer);
+  }, [latestReply]);
 
   const handleLogout = async () => {
     try {
@@ -699,7 +697,20 @@ function Chat() {
                   <div className="bubble-avatar">
                     {message.role === "user" ? "You" : "Sakhi"}
                   </div>
-                  <div className="bubble-content">{message.content}</div>
+                  <div className="bubble-content">
+                    {message.content}
+                    {message.role === "assistant" ? (
+                      <button
+                        type="button"
+                        className="message-action-button"
+                        onClick={() =>
+                          handlePlayAssistantReply(message.content)
+                        }
+                      >
+                        🔊 Hear
+                      </button>
+                    ) : null}
+                  </div>
                 </article>
               ))}
 
