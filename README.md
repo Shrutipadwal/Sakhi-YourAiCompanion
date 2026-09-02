@@ -37,7 +37,7 @@ Sakhi is an intelligent chatbot application that acts like a personal support co
    - Ask questions about anything
    - Get thoughtful, personalized responses
 
-6. **🎙️ Voice Conversations** _(Coming Soon)_
+6. **🎙️ Voice Conversations**
    - Talk to Sakhi using voice instead of text
    - Have more natural conversations
 
