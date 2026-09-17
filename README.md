@@ -6,6 +6,8 @@ Sakhi is an intelligent chatbot application that acts like a personal support co
 
 **In simple terms:** You chat with an AI that remembers who you are, what matters to you, and gives you personalized help whenever you need it.
 
+DEMO - https://sakhi-youraicompanion.netlify.app/
+
 ---
 
 ## 🎯 What Can Sakhi Help You With?
