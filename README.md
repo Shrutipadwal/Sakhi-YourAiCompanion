@@ -9,7 +9,7 @@ Sakhi is an AI companion for supportive, personalized conversations. It can reme
 - **Google sign-in:** Firebase Authentication protects the chat from signed-out visitors.
 - **AI conversations:** Chat with Sakhi for emotional support, study motivation, career guidance, wellness check-ins, or general conversation.
 - **Voice input:** Speak a message using browser speech recognition in Indian English (`en-IN`) where supported.
-- **Spoken replies:** Sakhi uses a Google Hindi voice by default when the browser provides one, with Microsoft Heera as a fallback option. Voice selection is not shown in the chat interface; if neither voice is available, the browser's default voice is used.
+- **Spoken replies:** Sakhi uses a Google Hindi(en-in) voice by default when the browser provides one, with Microsoft Heera as a fallback option. Voice selection is not shown in the chat interface; if neither voice is available, the browser's default voice is used.
 - **Conversation history:** Create chats, switch between saved conversations, and delete conversations.
 - **Chat titles:** Sakhi creates a title from the first message in a new chat; users can rename chats from the sidebar.
 - **Daily check-ins:** Share a quick mood check-in once per local day to start a supportive conversation.
