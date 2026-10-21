@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getMemoryProfile } from "../services/memoryService";
 
@@ -51,10 +52,21 @@ function MyJourney() {
     return (
       <main className="page-shell journey-shell">
         <section className="journey-panel">
+          <header className="journey-header">
+            <div>
+              <span className="journey-eyebrow">🌱 My Journey</span>
+              <h1>Your personal growth profile</h1>
+            </div>
+            <Link to="/chat" className="journey-back-link">
+              Back to chat
+            </Link>
+          </header>
           {isLoading ? (
-            <p>Loading your journey…</p>
+            <p className="journey-state">Loading your journey…</p>
           ) : (
-            <p>{error || "No journey data available."}</p>
+            <p className="journey-state" role={error ? "alert" : undefined}>
+              {error || "No journey data available."}
+            </p>
           )}
         </section>
       </main>
@@ -108,15 +120,18 @@ function MyJourney() {
     <main className="page-shell journey-shell">
       <section className="journey-panel">
         <header className="journey-header">
-          <div>
+          <div className="journey-heading-copy">
             <span className="journey-eyebrow">🌱 My Journey</span>
             <h1>Here is what Sakhi remembers about you.</h1>
+            <p>
+              This space is your personal growth profile — a calm view of what
+              Sakhi has learned about your goals, focus, motivation, and
+              preferences.
+            </p>
           </div>
-          <p>
-            This space is your personal growth profile — a calm view of what
-            Sakhi has learned about your goals, focus, motivation, and
-            preferences.
-          </p>
+          <Link to="/chat" className="journey-back-link">
+            Back to chat
+          </Link>
         </header>
 
         <div className="journey-card-grid">

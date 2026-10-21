@@ -8,15 +8,17 @@ Sakhi is an AI companion for supportive, personalized conversations. It can reme
 
 - **Google sign-in:** Firebase Authentication protects the chat from signed-out visitors.
 - **AI conversations:** Chat with Sakhi for emotional support, study motivation, career guidance, wellness check-ins, or general conversation.
-- **Voice input:** Speak a message using browser speech recognition where supported. The current recognition language is English (US).
-- **Spoken replies:** Sakhi reads its latest response aloud when browser speech synthesis is available.
+- **Voice input:** Speak a message using browser speech recognition in Indian English (`en-IN`) where supported.
+- **Spoken replies:** Sakhi uses a Google Hindi voice by default when the browser provides one, with Microsoft Heera as a fallback option. Voice selection is not shown in the chat interface; if neither voice is available, the browser's default voice is used.
 - **Conversation history:** Create chats, switch between saved conversations, and delete conversations.
-- **Generated chat titles:** Sakhi creates a title from the first message in a new chat.
+- **Chat titles:** Sakhi creates a title from the first message in a new chat; users can rename chats from the sidebar.
+- **Daily check-ins:** Share a quick mood check-in once per local day to start a supportive conversation.
+- **Reply actions:** Copy Sakhi's replies or retry the latest reply.
 - **Personalized memory:** Sakhi can extract longer-term details, such as goals, interests, study habits, preferences, and important people. It stores these in the user's Firestore profile and uses them as relevant context in later chats.
 
-Voice features depend on browser support and may work differently between browsers. Voice input currently uses the browser's Web Speech API.
+Voice features depend on browser and device support and may work differently between them. Voice input uses the browser's Web Speech API; some browsers may not provide speech recognition, or may require microphone permission and an internet connection. Spoken replies use voices provided by the browser or operating system. The app prefers a Google Hindi voice, uses Microsoft Heera if Google Hindi is unavailable, and otherwise falls back to the browser's default voice. Voice choice is kept out of the chat interface. If voice input is unavailable, users can type messages.
 
-> **My Journey status:** A profile page component exists in the source code, but it is not currently connected to an app route, so users cannot open it from the app yet.
+- **My Journey:** View your personal growth profile at `/journey` from the chat history sidebar. This page is available to signed-in users.
 
 ## Tech Stack
 
@@ -95,7 +97,7 @@ Memory extraction is best-effort: it depends on the AI response and may not iden
 src/
   components/   Authentication and route protection
   contexts/     Shared authentication state
-  pages/        Landing and chat screens; MyJourney is not routed yet
+  pages/        Landing, chat, and personal growth screens
   services/     Chat, conversation, message, prompt, and memory logic
   api.js        OpenRouter request handling
   firebase.js   Firebase Authentication and Firestore setup
@@ -113,6 +115,7 @@ src/
 
 - `/` and `/login`: landing page and Google sign-in
 - `/chat`: signed-in chat experience
+- `/journey`: signed-in personal growth profile
 - `/signup`: redirects to `/login`
 
 Unknown routes redirect to the landing page.

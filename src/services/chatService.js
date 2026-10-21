@@ -16,17 +16,24 @@ export async function sendMessageWithMemory(
   uid,
   conversationId,
   latestUserMessage,
+  { excludeLatestAssistant = false } = {},
 ) {
   const memoryProfile = await getMemoryProfile(uid);
   console.log("Memory loaded", memoryProfile);
 
   const systemPrompt = buildAssistantSystemPrompt();
   const memoryMessage = buildMemorySystemMessage(memoryProfile);
-  const recentHistory = await fetchRecentConversationMessages(
+  let recentHistory = await fetchRecentConversationMessages(
     uid,
     conversationId,
     6,
   );
+  if (
+    excludeLatestAssistant &&
+    recentHistory[recentHistory.length - 1]?.role === "assistant"
+  ) {
+    recentHistory = recentHistory.slice(0, -1);
+  }
 
   console.log(
     "Loaded recent history messages:",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../contexts/AuthContext";
@@ -13,8 +13,23 @@ import {
 import {
   fetchConversationMessages,
   saveConversationMessage,
+  updateConversationMessage,
 } from "../services/messageService";
 import { generateConversationTitle } from "../services/conversationTitleService";
+import {
+  getLastCheckIn,
+  getLastCheckInPromptDate,
+  setLastCheckIn,
+  setLastCheckInPromptDate,
+} from "../services/checkinService";
+
+const checkInOptions = [
+  { label: "Calm", icon: "☀️" },
+  { label: "Okay", icon: "🌿" },
+  { label: "Stressed", icon: "🌧️" },
+  { label: "Low", icon: "☁️" },
+  { label: "Hopeful", icon: "🌱" },
+];
 
 const supportPillars = [
   "❤️ Emotional support",
@@ -22,8 +37,20 @@ const supportPillars = [
   "📚 Study motivation",
   "🧘 Wellness check-ins",
   "💬 Conversational AI support",
-  "🎙️ Voice conversations (future feature)",
+  "🎙️ Voice input and spoken replies",
 ];
+
+function getPreferredVoice(voices) {
+  const googleHindi = voices.find(
+    (voice) =>
+      /google/i.test(voice.name) &&
+      (/(hindi|हिन्दी|हिंदी)/i.test(voice.name) ||
+        voice.lang.toLowerCase().startsWith("hi")),
+  );
+  const heera = voices.find((voice) => /heera/i.test(voice.name));
+
+  return googleHindi || heera || null;
+}
 
 function formatTime(timestamp) {
   if (!timestamp) {
@@ -39,6 +66,13 @@ function formatTime(timestamp) {
   });
 }
 
+function getLocalDayString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function Chat() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -52,10 +86,22 @@ function Chat() {
   const [error, setError] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [latestReply, setLatestReply] = useState("");
+  const [speechVoices, setSpeechVoices] = useState([]);
+  const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
+  const [isCheckInSubmitting, setIsCheckInSubmitting] = useState(false);
+  const [editingConversationId, setEditingConversationId] = useState(null);
+  const [conversationTitleDraft, setConversationTitleDraft] = useState("");
+  const [retryingMessageId, setRetryingMessageId] = useState(null);
+  const [messageActionStatus, setMessageActionStatus] = useState({});
+  const [isHistoryOpen, setIsHistoryOpen] = useState(
+    () => !window.matchMedia("(max-width: 980px)").matches,
+  );
 
   const recognitionRef = useRef(null);
   const transcriptRef = useRef("");
   const chatEndRef = useRef(null);
+  const firstCheckInOptionRef = useRef(null);
+  const messageInputRef = useRef(null);
 
   const SpeechRecognition = useMemo(
     () => window.SpeechRecognition || window.webkitSpeechRecognition || null,
@@ -63,6 +109,79 @@ function Chat() {
   );
 
   const supportsVoiceInput = Boolean(SpeechRecognition);
+  const supportsVoiceOutput = "speechSynthesis" in window;
+  const selectedVoice = getPreferredVoice(speechVoices);
+
+  useEffect(() => {
+    if (!supportsVoiceOutput) {
+      return undefined;
+    }
+
+    const updateVoices = () => {
+      setSpeechVoices(window.speechSynthesis.getVoices());
+    };
+
+    updateVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", updateVoices);
+
+    return () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", updateVoices);
+    };
+  }, [supportsVoiceOutput]);
+
+  useEffect(() => {
+    if (!user?.uid) {
+      return undefined;
+    }
+
+    let isActive = true;
+    const refreshDailyCheckIn = async () => {
+      try {
+        const [lastCheckIn, lastPromptDate] = await Promise.all([
+          getLastCheckIn(user.uid),
+          getLastCheckInPromptDate(user.uid),
+        ]);
+        if (isActive) {
+          const lastShownDate = lastPromptDate || lastCheckIn;
+          setShowDailyCheckIn(lastShownDate !== getLocalDayString());
+        }
+      } catch (checkInError) {
+        console.error("Failed to load daily check-in:", checkInError);
+        if (isActive) {
+          setError(
+            "Unable to load today's check-in. You can still chat as usual.",
+          );
+        }
+      }
+    };
+    const now = new Date();
+    const nextDay = new Date(now);
+    nextDay.setHours(24, 0, 0, 50);
+    const midnightRefresh = window.setTimeout(
+      refreshDailyCheckIn,
+      nextDay.getTime() - now.getTime(),
+    );
+    void refreshDailyCheckIn();
+
+    return () => {
+      isActive = false;
+      window.clearTimeout(midnightRefresh);
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!showDailyCheckIn) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    firstCheckInOptionRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showDailyCheckIn]);
 
   const loadConversationList = async (uid) => {
     const fetched = await fetchConversations(uid);
@@ -70,7 +189,14 @@ function Chat() {
     return fetched;
   };
 
+  const closeHistoryOnSmallScreen = () => {
+    if (window.matchMedia("(max-width: 980px)").matches) {
+      setIsHistoryOpen(false);
+    }
+  };
+
   const openConversation = async (conversation) => {
+    closeHistoryOnSmallScreen();
     setActiveConversation(conversation);
     setDraft("");
     setError("");
@@ -80,6 +206,7 @@ function Chat() {
       conversation.id,
     );
     setMessages(storedMessages);
+    setMessageActionStatus({});
   };
 
   const createNewChat = async () => {
@@ -101,6 +228,7 @@ function Chat() {
       setActiveConversation(newConversation);
       setMessages([]);
       setConversations(list);
+      closeHistoryOnSmallScreen();
       return newConversation;
     } catch (creationError) {
       console.error("Failed to create new chat:", creationError);
@@ -166,6 +294,52 @@ function Chat() {
     }
   };
 
+  const beginRenameConversation = (event, conversation) => {
+    event.stopPropagation();
+    setError("");
+    setEditingConversationId(conversation.id);
+    setConversationTitleDraft(conversation.title || "");
+  };
+
+  const cancelRenameConversation = (event) => {
+    event?.stopPropagation();
+    setEditingConversationId(null);
+    setConversationTitleDraft("");
+  };
+
+  const saveConversationRename = async (event, conversation) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const title = conversationTitleDraft.trim();
+    if (!title) {
+      setError("Chat titles cannot be empty.");
+      return;
+    }
+    if (title.length > 60) {
+      setError("Chat titles must be 60 characters or fewer.");
+      return;
+    }
+
+    try {
+      await updateConversationTitle(user.uid, conversation.id, title);
+      setConversations((current) =>
+        current.map((item) =>
+          item.id === conversation.id ? { ...item, title } : item,
+        ),
+      );
+      setActiveConversation((current) =>
+        current?.id === conversation.id ? { ...current, title } : current,
+      );
+      setEditingConversationId(null);
+      setConversationTitleDraft("");
+      setError("");
+    } catch (renameError) {
+      console.error("Failed to rename conversation:", renameError);
+      setError("Unable to rename this chat. Please try again.");
+    }
+  };
+
   useEffect(() => {
     if (user?.uid) {
       loadInitialConversations();
@@ -175,6 +349,16 @@ function Chat() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    const input = messageInputRef.current;
+    if (!input) {
+      return;
+    }
+
+    input.style.height = "auto";
+    input.style.height = `${Math.min(input.scrollHeight, 144)}px`;
+  }, [draft]);
 
   useEffect(() => {
     return () => {
@@ -189,7 +373,7 @@ function Chat() {
   }, []);
 
   useEffect(() => {
-    if (!latestReply || !("speechSynthesis" in window)) {
+    if (!latestReply || !supportsVoiceOutput) {
       return;
     }
 
@@ -197,8 +381,13 @@ function Chat() {
     const utterance = new SpeechSynthesisUtterance(latestReply);
     utterance.rate = 1;
     utterance.pitch = 1;
+    const voice =
+      selectedVoice || getPreferredVoice(window.speechSynthesis.getVoices());
+    if (voice) {
+      utterance.voice = voice;
+    }
     window.speechSynthesis.speak(utterance);
-  }, [latestReply]);
+  }, [latestReply, selectedVoice, supportsVoiceOutput]);
 
   const handleLogout = async () => {
     try {
@@ -219,8 +408,8 @@ function Chat() {
 
   const startListening = () => {
     if (!supportsVoiceInput) {
-      setVoiceError(
-        "Voice input is not supported in this browser. Try Chrome or Edge.",
+      window.alert(
+        "Voice input is not supported in this browser. Try Chrome or Edge, or type your message instead.",
       );
       return;
     }
@@ -228,7 +417,7 @@ function Chat() {
     setVoiceError("");
 
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
+    recognition.lang = "en-IN";
     recognition.interimResults = true;
     recognition.continuous = false;
 
@@ -252,7 +441,24 @@ function Chat() {
 
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event);
-      setVoiceError(`Voice input error: ${event.error}`);
+      if (event.error === "aborted") {
+        setIsListening(false);
+        return;
+      }
+
+      const errorMessages = {
+        "not-allowed":
+          "Microphone access or speech recognition was blocked. Check browser permissions, or type your message instead.",
+        "service-not-allowed":
+          "This browser does not allow its speech service here. Try Chrome or Edge on HTTPS, or type your message.",
+        network:
+          "The speech recognition service is unavailable. Check your connection, or type your message.",
+        "no-speech": "No speech was detected. Try again, or type your message.",
+      };
+      setVoiceError(
+        errorMessages[event.error] ||
+          `Voice input error: ${event.error}. You can type your message instead.`,
+      );
       setIsListening(false);
     };
 
@@ -261,15 +467,22 @@ function Chat() {
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (recognitionError) {
+      console.error("Could not start speech recognition:", recognitionError);
+      setVoiceError(
+        "Could not start voice input. Check browser microphone permissions, or type your message.",
+      );
+      setIsListening(false);
+      recognitionRef.current = null;
+    }
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    const trimmedMessage = draft.trim();
+  const sendUserMessage = async (content) => {
+    const trimmedMessage = content.trim();
     if (!trimmedMessage || isLoading) {
-      return;
+      return false;
     }
 
     setIsLoading(true);
@@ -277,7 +490,7 @@ function Chat() {
     setVoiceError("");
 
     const userMessage = {
-      id: Date.now(),
+      id: `pending-user-${Date.now()}`,
       role: "user",
       content: trimmedMessage,
     };
@@ -290,7 +503,8 @@ function Chat() {
 
       let currentConversation = activeConversation;
       if (!currentConversation) {
-        currentConversation = await createNewChat();
+        currentConversation = await createConversation(user.uid);
+        setActiveConversation(currentConversation);
       }
 
       const activeId = currentConversation?.id;
@@ -310,39 +524,58 @@ function Chat() {
       ) {
         const newTitle = await generateConversationTitle(trimmedMessage);
         await updateConversationTitle(user.uid, activeId, newTitle);
+        setActiveConversation((current) =>
+          current?.id === activeId ? { ...current, title: newTitle } : current,
+        );
+        setConversations((current) =>
+          current.map((item) =>
+            item.id === activeId ? { ...item, title: newTitle } : item,
+          ),
+        );
         titleUpdated = true;
       }
 
-      const conversationMessages = [...messages, userMessage];
       const assistantReply = await sendMessageWithMemory(
         user.uid,
         activeId,
         trimmedMessage,
       );
-
-      setLatestReply(assistantReply);
+      const assistantMessageId = await saveConversationMessage(
+        user.uid,
+        activeId,
+        {
+          role: "assistant",
+          content: assistantReply,
+        },
+      );
       const assistantMessage = {
-        id: Date.now() + 1,
+        id: assistantMessageId,
         role: "assistant",
         content: assistantReply,
       };
       setMessages((currentMessages) => [...currentMessages, assistantMessage]);
-      await saveConversationMessage(user.uid, activeId, {
-        role: "assistant",
-        content: assistantReply,
-      });
+      setLatestReply(assistantReply);
 
-      if (titleUpdated) {
+      try {
         const updatedList = await loadConversationList(user.uid);
-        const updatedConversation = updatedList.find(
-          (item) => item.id === activeId,
-        );
-        if (updatedConversation) {
-          setActiveConversation(updatedConversation);
+        if (titleUpdated) {
+          const updatedConversation = updatedList.find(
+            (item) => item.id === activeId,
+          );
+          if (updatedConversation) {
+            setActiveConversation(updatedConversation);
+          }
         }
-      } else {
-        await loadConversationList(user.uid);
+      } catch (refreshError) {
+        console.error(
+          "Failed to refresh conversations after sending:",
+          refreshError,
+        );
+        setError(
+          "Your message was sent, but the chat list could not be refreshed.",
+        );
       }
+      return true;
     } catch (caughtError) {
       console.error("Chat request failed:", caughtError);
       setLatestReply("");
@@ -354,34 +587,169 @@ function Chat() {
         {
           id: Date.now() + 2,
           role: "assistant",
+          persisted: false,
           content:
             "I’m having a little trouble responding right now, so please try again in a moment.",
         },
       ]);
+      return false;
     } finally {
       setIsLoading(false);
       setIsSaving(false);
     }
   };
 
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    void sendUserMessage(draft);
+  };
+
+  const handleDailyCheckIn = async (mood) => {
+    setIsCheckInSubmitting(true);
+    const sent = await sendUserMessage(
+      `I’d like to check in today. I’m feeling ${mood.toLowerCase()}.`,
+    );
+
+    if (sent) {
+      try {
+        await setLastCheckIn(user.uid, getLocalDayString());
+        setShowDailyCheckIn(false);
+      } catch (checkInError) {
+        console.error("Failed to save daily check-in:", checkInError);
+        setError(
+          "Your message was sent, but we couldn't save today's check-in status.",
+        );
+      }
+    }
+    setIsCheckInSubmitting(false);
+  };
+
+  const dismissDailyCheckIn = async () => {
+    setIsCheckInSubmitting(true);
+    try {
+      await setLastCheckInPromptDate(user.uid, getLocalDayString());
+      setShowDailyCheckIn(false);
+      setError("");
+    } catch (dismissError) {
+      console.error("Failed to dismiss daily check-in:", dismissError);
+      setError(
+        "Unable to save this for today. Please try closing the check-in again.",
+      );
+    } finally {
+      setIsCheckInSubmitting(false);
+    }
+  };
+
+  const handleCopyMessage = async (message) => {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard access is unavailable in this browser.");
+      }
+      await navigator.clipboard.writeText(message.content);
+      setMessageActionStatus((current) => ({
+        ...current,
+        [message.id]: "Copied",
+      }));
+    } catch (copyError) {
+      console.error("Failed to copy assistant message:", copyError);
+      setMessageActionStatus((current) => ({
+        ...current,
+        [message.id]: "Copy unavailable",
+      }));
+    }
+  };
+
+  const handleRetryMessage = async (message) => {
+    const messageIndex = messages.findIndex((item) => item.id === message.id);
+    const previousUserMessage = messages
+      .slice(0, messageIndex)
+      .reverse()
+      .find((item) => item.role === "user");
+
+    if (!previousUserMessage || !activeConversation?.id || isLoading) {
+      return;
+    }
+
+    setRetryingMessageId(message.id);
+    setIsLoading(true);
+    setError("");
+    try {
+      const assistantReply = await sendMessageWithMemory(
+        user.uid,
+        activeConversation.id,
+        previousUserMessage.content,
+        { excludeLatestAssistant: true },
+      );
+      await updateConversationMessage(
+        user.uid,
+        activeConversation.id,
+        message.id,
+        { content: assistantReply },
+      );
+      setMessages((current) =>
+        current.map((item) =>
+          item.id === message.id
+            ? { ...item, content: assistantReply }
+            : item,
+        ),
+      );
+      setLatestReply(assistantReply);
+      setMessageActionStatus((current) => ({
+        ...current,
+        [message.id]: "",
+      }));
+    } catch (retryError) {
+      console.error("Failed to retry assistant response:", retryError);
+      setError("Unable to retry Sakhi's reply. Please try again.");
+    } finally {
+      setRetryingMessageId(null);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="page-shell">
-      <div className="app-shell">
+      <div className={`app-shell ${isHistoryOpen ? "history-is-open" : ""}`}>
+        {isHistoryOpen ? (
+          <button
+            type="button"
+            className="history-backdrop"
+            aria-label="Close chat history"
+            onClick={() => setIsHistoryOpen(false)}
+          />
+        ) : null}
         <aside className="sidebar">
+          <div className="sidebar-brand">
+            <span className="sidebar-brand-mark">s</span>
+            <span>
+              <strong>Sakhi – AI Companion</strong>
+              <small>A calm space for a gentle conversation.</small>
+            </span>
+          </div>
           <div className="sidebar-header">
             <div>
-              <h2>Your Chats</h2>
+              <h2>Chat history</h2>
               <p className="sidebar-subtitle">
-                Switch between conversations anytime.
+                Pick up where you left off.
               </p>
             </div>
-            <button
-              type="button"
-              className="new-chat-button"
-              onClick={createNewChat}
-            >
-              New Chat
-            </button>
+            <div className="sidebar-header-actions">
+              <button
+                type="button"
+                className="new-chat-button"
+                onClick={createNewChat}
+              >
+                New chat
+              </button>
+              <button
+                type="button"
+                className="history-close-button"
+                aria-label="Hide chat history"
+                onClick={() => setIsHistoryOpen(false)}
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="conversation-list">
@@ -394,79 +762,194 @@ function Chat() {
                 <div
                   key={conversation.id}
                   className={`conversation-item ${conversation.id === activeConversation?.id ? "active" : ""}`}
-                  onClick={() => openConversation(conversation)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      openConversation(conversation);
-                    }
-                  }}
                 >
-                  <div>
-                    <div className="conversation-title">
-                      {conversation.title || "New Chat"}
-                    </div>
-                    <div className="conversation-meta">
-                      {formatTime(conversation.updatedAt)}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="delete-button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleDeleteConversation(conversation.id);
-                    }}
-                  >
-                    ✕
-                  </button>
+                  {editingConversationId === conversation.id ? (
+                    <form
+                      className="conversation-rename-form"
+                      onSubmit={(event) =>
+                        saveConversationRename(event, conversation)
+                      }
+                    >
+                      <input
+                        aria-label="Chat title"
+                        autoFocus
+                        disabled={isLoading}
+                        maxLength={60}
+                        value={conversationTitleDraft}
+                        onChange={(event) =>
+                          setConversationTitleDraft(event.target.value)
+                        }
+                        onClick={(event) => event.stopPropagation()}
+                      />
+                      <button
+                        type="submit"
+                        className="conversation-action"
+                        disabled={isLoading}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        className="conversation-action"
+                        onClick={cancelRenameConversation}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </button>
+                    </form>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="conversation-open-button"
+                        onClick={() => openConversation(conversation)}
+                      >
+                        <span className="conversation-title">
+                          {conversation.title || "New Chat"}
+                        </span>
+                        <span className="conversation-meta">
+                          {formatTime(conversation.updatedAt)}
+                        </span>
+                      </button>
+                      <div className="conversation-actions">
+                        <button
+                          type="button"
+                          className="delete-button"
+                          aria-label={`Rename ${conversation.title || "chat"}`}
+                          title="Rename chat"
+                          disabled={isLoading}
+                          onClick={(event) =>
+                            beginRenameConversation(event, conversation)
+                          }
+                        >
+                          ✎
+                        </button>
+                        <button
+                          type="button"
+                          className="delete-button"
+                          aria-label={`Delete ${conversation.title || "chat"}`}
+                          title="Delete chat"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDeleteConversation(conversation.id);
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))
             )}
+          </div>
+          <div className="sidebar-footer">
+            <Link to="/journey" className="sidebar-journey-link">
+              My Journey
+            </Link>
+            <button
+              type="button"
+              className="sidebar-logout-button"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
           </div>
         </aside>
 
         <section className="app-panel chat-panel">
           <header className="top-bar">
-            <div className="title-group">
-              <span className="title-dot" />
-              <div>
-                <h1>Sakhi – AI Companion</h1>
-                <p className="subtitle">
-                  A calm space for a gentle conversation.
-                </p>
+            <button
+              type="button"
+              className="history-toggle-button"
+              aria-expanded={isHistoryOpen}
+              aria-label={
+                isHistoryOpen ? "Hide chat history" : "Show chat history"
+              }
+              onClick={() => setIsHistoryOpen((isOpen) => !isOpen)}
+            >
+              <span aria-hidden="true">{isHistoryOpen ? "‹" : "›"}</span>
+            </button>
+            <div className="conversation-panel-header">
+              <div className="active-conversation-heading">
+                <h2>{activeConversation?.title || "New Chat"}</h2>
+                {activeConversation?.updatedAt ? (
+                  <p className="active-conversation-meta">
+                    Updated {formatTime(activeConversation.updatedAt)}
+                  </p>
+                ) : null}
               </div>
-            </div>
-
-            <div className="top-actions">
-              {user?.email ? (
-                <span className="user-chip">{user.email}</span>
-              ) : null}
-              <button
-                type="button"
-                className="logout-button"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
             </div>
           </header>
 
-          <div className="conversation-panel-header">
-            <div>
-              <h2>{activeConversation?.title || "New Chat"}</h2>
-              {activeConversation?.updatedAt ? (
-                <p className="conversation-meta">
-                  Updated {formatTime(activeConversation.updatedAt)}
-                </p>
-              ) : null}
+          {showDailyCheckIn ? (
+            <div
+              className="check-in-overlay"
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && !isCheckInSubmitting) {
+                  void dismissDailyCheckIn();
+                }
+              }}
+            >
+              <section
+                className="daily-check-in check-in-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="check-in-title"
+                aria-describedby="check-in-description"
+              >
+                <button
+                  type="button"
+                  className="check-in-dismiss-icon"
+                  aria-label="Dismiss today's check-in"
+                  onClick={dismissDailyCheckIn}
+                  disabled={isLoading || isCheckInSubmitting}
+                >
+                  ×
+                </button>
+                <div className="check-in-copy">
+                  <span className="check-in-eyebrow">
+                    A little space for you
+                  </span>
+                  <h3 id="check-in-title">How are you feeling today?</h3>
+                  <p id="check-in-description">
+                    A small check-in can help Sakhi meet you where you are.
+                  </p>
+                </div>
+                <div className="check-in-options">
+                  {checkInOptions.map((option, index) => (
+                    <button
+                      key={option.label}
+                      ref={index === 0 ? firstCheckInOptionRef : undefined}
+                      type="button"
+                      onClick={() => handleDailyCheckIn(option.label)}
+                      disabled={isLoading || isCheckInSubmitting}
+                    >
+                      <span aria-hidden="true">{option.icon}</span>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                {error ? (
+                  <p className="check-in-error" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  className="check-in-skip"
+                  onClick={dismissDailyCheckIn}
+                  disabled={isLoading || isCheckInSubmitting}
+                >
+                  Not now
+                </button>
+              </section>
             </div>
-          </div>
+          ) : null}
 
           <div className="conversation-shell">
             <div className="message-list">
-              {messages.map((message) => (
+              {messages.map((message, index) => (
                 <article
                   key={message.id}
                   className={`message-bubble ${message.role}`}
@@ -474,7 +957,44 @@ function Chat() {
                   <div className="bubble-avatar">
                     {message.role === "user" ? "You" : "Sakhi"}
                   </div>
-                  <div className="bubble-content">{message.content}</div>
+                  <div className="message-body">
+                    <div className="bubble-content">{message.content}</div>
+                    {message.role === "assistant" &&
+                    message.persisted !== false ? (
+                      <div className="assistant-message-actions">
+                        <div className="message-action-buttons">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMessage(message)}
+                            aria-label="Copy Sakhi's reply"
+                          >
+                            Copy
+                          </button>
+                          {index === messages.length - 1 ? (
+                            <button
+                              type="button"
+                              onClick={() => handleRetryMessage(message)}
+                              disabled={
+                                isLoading || retryingMessageId === message.id
+                              }
+                            >
+                              {retryingMessageId === message.id
+                                ? "Trying again…"
+                                : "Retry"}
+                            </button>
+                          ) : null}
+                        </div>
+                        {messageActionStatus[message.id] ? (
+                          <span
+                            className="message-action-status"
+                            role="status"
+                          >
+                            {messageActionStatus[message.id]}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
                 </article>
               ))}
 
@@ -495,19 +1015,28 @@ function Chat() {
                 className={`voice-button ${isListening ? "is-active" : ""}`}
                 onClick={isListening ? stopListening : startListening}
                 disabled={isLoading}
+                aria-label={
+                  isListening
+                    ? "Stop voice input"
+                    : "Start voice input in Indian English"
+                }
               >
                 {isListening ? "Stop voice" : "Voice"}
               </button>
               {voiceError ? (
-                <span className="status-text warning">{voiceError}</span>
+                <span className="status-text warning" role="status">
+                  {voiceError}
+                </span>
               ) : null}
             </div>
 
             <textarea
+              ref={messageInputRef}
               id="message"
               className="message-input"
               placeholder="Share what’s on your mind..."
               value={draft}
+              aria-label="Message to Sakhi"
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
@@ -515,14 +1044,10 @@ function Chat() {
                   handleSubmit(event);
                 }
               }}
-              rows={4}
+              rows={1}
             />
 
             <div className="composer-actions">
-              <span className="hint">
-                You can now use voice to speak comfortably without typing—this
-                is our main feature.
-              </span>
               <button
                 type="submit"
                 className="send-button"

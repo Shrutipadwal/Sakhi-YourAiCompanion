@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Chat from "./pages/Chat";
+import MyJourney from "./pages/MyJourney";
 import RequireAuth from "./components/RequireAuth";
 
 function App() {
@@ -14,6 +15,14 @@ function App() {
         element={
           <RequireAuth>
             <Chat />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/journey"
+        element={
+          <RequireAuth>
+            <MyJourney />
           </RequireAuth>
         }
       />

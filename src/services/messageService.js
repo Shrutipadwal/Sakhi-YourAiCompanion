@@ -80,6 +80,26 @@ export async function saveConversationMessage(
   return messageRef.id;
 }
 
+export async function updateConversationMessage(
+  uid,
+  conversationId,
+  messageId,
+  updates,
+) {
+  await updateDoc(
+    doc(
+      db,
+      "users",
+      uid,
+      "conversations",
+      conversationId,
+      "messages",
+      messageId,
+    ),
+    updates,
+  );
+}
+
 export async function deleteConversationMessages(uid, conversationId) {
   const snapshot = await getDocs(messagesCollection(uid, conversationId));
   const deletePromises = snapshot.docs.map((docItem) =>
