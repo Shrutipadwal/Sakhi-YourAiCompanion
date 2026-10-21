@@ -1703,8 +1703,48 @@ h1 {
   scroll-margin-top: 24px;
 }
 
+.landing-about-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
 .landing-section-heading {
+  flex: 1 1 auto;
+  min-width: 0;
   margin-bottom: 22px;
+}
+
+.landing-about-character {
+  position: relative;
+  display: grid;
+  width: 142px;
+  height: 142px;
+  flex: 0 0 auto;
+  place-items: center;
+  margin: 0 24px 22px 0;
+  border: 1px solid rgba(84, 125, 105, 0.12);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, #f7faef, #e7f0e3 72%);
+  box-shadow: 0 12px 30px rgba(56, 82, 64, 0.08);
+}
+
+.landing-about-character .sakhi-character {
+  width: 100px;
+  height: 100px;
+}
+
+.landing-about-character .illustration-spark-one {
+  top: 11px;
+  left: auto;
+  right: 18px;
+}
+
+.landing-about-character .illustration-spark-two {
+  right: auto;
+  bottom: 18px;
+  left: 12px;
 }
 
 .landing-section-heading > span {
@@ -1864,6 +1904,24 @@ h1 {
   font-size: 0.76rem;
   cursor: pointer;
   transition: background 150ms ease, border-color 150ms ease;
+}
+
+.message-action-buttons .message-speak-button {
+  display: inline-grid;
+  width: 30px;
+  min-width: 30px;
+  padding: 5px;
+  place-items: center;
+}
+
+.message-speak-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .message-action-buttons button:hover:not(:disabled) {
@@ -2062,6 +2120,26 @@ h1 {
 
   .landing-hero-title {
     font-size: clamp(2.3rem, 12vw, 3.25rem);
+  }
+
+  .landing-about-intro {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .landing-about-character {
+    width: 76px;
+    height: 76px;
+    margin: 4px 0 18px;
+  }
+
+  .landing-about-character .sakhi-character {
+    width: 58px;
+    height: 58px;
+  }
+
+  .landing-about-character .character-face {
+    transform: scale(0.72);
   }
 
   .landing-illustration {
@@ -2845,6 +2923,112 @@ h1 {
   font-size: 0.68rem;
 }
 
+.continue-conversation-prompt {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 10px;
+  padding: 12px 42px 12px 14px;
+  border: 1px solid rgba(84, 125, 105, 0.18);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 0 0, rgba(217, 234, 211, 0.7), transparent 48%),
+    linear-gradient(120deg, #f7faf4, #fffdf8);
+  box-shadow: 0 8px 22px rgba(56, 82, 64, 0.06);
+  animation: card-enter 350ms ease both;
+}
+
+.continue-conversation-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.continue-conversation-eyebrow {
+  color: #718c76;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.continue-conversation-copy strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-family: "Manrope", sans-serif;
+  font-size: 0.84rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.continue-conversation-time {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.continue-conversation-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.continue-conversation-actions button {
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.continue-conversation-button {
+  background: #587d62;
+  color: #fff;
+}
+
+.continue-conversation-button:hover {
+  background: #466c51;
+}
+
+.continue-new-chat-button {
+  border-color: rgba(84, 125, 105, 0.16) !important;
+  background: rgba(255, 255, 252, 0.8);
+  color: #52695c;
+}
+
+.continue-new-chat-button:hover {
+  background: #edf3e9;
+}
+
+.continue-conversation-dismiss {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.continue-conversation-dismiss:hover {
+  background: rgba(84, 125, 105, 0.09);
+  color: var(--ink);
+}
+
 .conversation-shell {
   flex: 1 1 0;
   min-height: 0;
@@ -3063,6 +3247,28 @@ h1 {
 
   .chat-panel .top-bar .conversation-panel-header {
     margin: 0;
+  }
+
+  .continue-conversation-prompt {
+    align-items: flex-start;
+    gap: 9px;
+    padding: 10px 38px 10px 11px;
+  }
+
+  .continue-conversation-copy strong {
+    max-width: 100%;
+    font-size: 0.78rem;
+  }
+
+  .continue-conversation-actions {
+    align-self: center;
+    gap: 4px;
+  }
+
+  .continue-conversation-actions button {
+    min-height: 29px;
+    padding: 5px 7px;
+    font-size: 0.65rem;
   }
 }
 

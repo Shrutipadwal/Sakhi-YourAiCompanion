@@ -11,9 +11,10 @@ Sakhi is an AI companion for supportive, personalized conversations. It can reme
 - **Voice input:** Speak a message using browser speech recognition in Indian English (`en-IN`) where supported.
 - **Spoken replies:** Sakhi uses a Google Hindi(en-in) voice by default when the browser provides one, with Microsoft Heera as a fallback option. Voice selection is not shown in the chat interface; if neither voice is available, the browser's default voice is used.
 - **Conversation history:** Create chats, switch between saved conversations, and delete conversations.
+- **Resume recent chat:** When returning, continue the most recently updated conversation or start a new chat from a dismissible prompt.
 - **Chat titles:** Sakhi creates a title from the first message in a new chat; users can rename chats from the sidebar.
 - **Daily check-ins:** Share a quick mood check-in once per local day to start a supportive conversation.
-- **Reply actions:** Copy Sakhi's replies or retry the latest reply.
+- **Reply actions:** Copy Sakhi's replies, replay them aloud, or retry the latest reply.
 - **Personalized memory:** Sakhi can extract longer-term details, such as goals, interests, study habits, preferences, and important people. It stores these in the user's Firestore profile and uses them as relevant context in later chats.
 
 Voice features depend on browser and device support and may work differently between them. Voice input uses the browser's Web Speech API; some browsers may not provide speech recognition, or may require microphone permission and an internet connection. Spoken replies use voices provided by the browser or operating system. The app prefers a Google Hindi voice, uses Microsoft Heera if Google Hindi is unavailable, and otherwise falls back to the browser's default voice. Voice choice is kept out of the chat interface. If voice input is unavailable, users can type messages.

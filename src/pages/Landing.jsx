@@ -161,14 +161,35 @@ const Landing = () => {
         </div>
 
         <section className="landing-about" id="about">
-          <div className="landing-section-heading">
-            <span>About Sakhi</span>
-            <h2>A thoughtful companion for the moments in between.</h2>
-            <p>
-              Sakhi brings supportive conversation, practical encouragement,
-              and personal reflection into one calm place. It is here to listen
-              and help you explore your next step—not to judge or rush you.
-            </p>
+          <div className="landing-about-intro">
+            <div className="landing-section-heading">
+              <span>About Sakhi</span>
+              <h2>A thoughtful companion for the moments in between.</h2>
+              <p>
+                Sakhi brings supportive conversation, practical encouragement,
+                and personal reflection into one calm place. It is here to
+                listen and help you explore your next step—not to judge or rush
+                you.
+              </p>
+            </div>
+            <div className="landing-about-character" aria-hidden="true">
+              <span className="illustration-spark illustration-spark-one">
+                ✦
+              </span>
+              <span className="illustration-spark illustration-spark-two">
+                ✧
+              </span>
+              <div className="sakhi-character">
+                <span className="character-leaf character-leaf-left" />
+                <span className="character-leaf character-leaf-right" />
+                <span className="character-face">
+                  <span className="character-eyes" />
+                  <span className="character-smile" />
+                  <span className="character-blush character-blush-left" />
+                  <span className="character-blush character-blush-right" />
+                </span>
+              </div>
+            </div>
           </div>
           <div className="landing-feature-grid" id="how-it-helps">
             <article className="landing-feature-card">

@@ -80,6 +80,7 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
+  const [recentConversationPrompt, setRecentConversationPrompt] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -197,6 +198,7 @@ function Chat() {
 
   const openConversation = async (conversation) => {
     closeHistoryOnSmallScreen();
+    setRecentConversationPrompt(null);
     setActiveConversation(conversation);
     setDraft("");
     setError("");
@@ -207,6 +209,7 @@ function Chat() {
     );
     setMessages(storedMessages);
     setMessageActionStatus({});
+    return storedMessages;
   };
 
   const createNewChat = async () => {
@@ -216,6 +219,7 @@ function Chat() {
 
     setIsLoading(true);
     setError("");
+    setRecentConversationPrompt(null);
 
     try {
       const created = await createConversation(user.uid);
@@ -282,7 +286,10 @@ function Chat() {
     try {
       const list = await loadConversationList(user.uid);
       if (list.length > 0) {
-        await openConversation(list[0]);
+        const lastMessages = await openConversation(list[0]);
+        if (lastMessages.some((message) => message.role === "user")) {
+          setRecentConversationPrompt(list[0]);
+        }
       } else {
         await createNewChat();
       }
@@ -659,6 +666,44 @@ function Chat() {
     }
   };
 
+  const handleSpeakMessage = (message) => {
+    if (!supportsVoiceOutput) {
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(message.content);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    const voice =
+      selectedVoice || getPreferredVoice(window.speechSynthesis.getVoices());
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onstart = () => {
+      setMessageActionStatus((current) => ({
+        ...current,
+        [message.id]: "Playing reply",
+      }));
+    };
+    utterance.onend = () => {
+      setMessageActionStatus((current) => ({
+        ...current,
+        [message.id]: "",
+      }));
+    };
+    utterance.onerror = (speechError) => {
+      console.error("Could not play assistant reply:", speechError);
+      setMessageActionStatus((current) => ({
+        ...current,
+        [message.id]: "Could not play voice reply",
+      }));
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const handleRetryMessage = async (message) => {
     const messageIndex = messages.findIndex((item) => item.id === message.id);
     const previousUserMessage = messages
@@ -882,6 +927,52 @@ function Chat() {
             </div>
           </header>
 
+          {recentConversationPrompt ? (
+            <aside
+              className="continue-conversation-prompt"
+              aria-label="Continue your last conversation"
+            >
+              <div className="continue-conversation-copy">
+                <span className="continue-conversation-eyebrow">
+                  Welcome back
+                </span>
+                <strong>
+                  Continue “
+                  {recentConversationPrompt.title || "your last conversation"}
+                  ”?
+                </strong>
+                <span className="continue-conversation-time">
+                  Last active{" "}
+                  {formatTime(recentConversationPrompt.updatedAt)}
+                </span>
+              </div>
+              <div className="continue-conversation-actions">
+                <button
+                  type="button"
+                  className="continue-conversation-button"
+                  onClick={() => openConversation(recentConversationPrompt)}
+                >
+                  Continue
+                </button>
+                <button
+                  type="button"
+                  className="continue-new-chat-button"
+                  onClick={createNewChat}
+                >
+                  New chat
+                </button>
+              </div>
+              <button
+                type="button"
+                className="continue-conversation-dismiss"
+                aria-label="Dismiss continue conversation prompt"
+                onClick={() => setRecentConversationPrompt(null)}
+              >
+                ×
+              </button>
+            </aside>
+          ) : null}
+
           {showDailyCheckIn ? (
             <div
               className="check-in-overlay"
@@ -970,6 +1061,24 @@ function Chat() {
                           >
                             Copy
                           </button>
+                          <button
+                            type="button"
+                            className="message-speak-button"
+                            onClick={() => handleSpeakMessage(message)}
+                            aria-label="Play Sakhi's reply aloud"
+                            title="Play reply aloud"
+                            disabled={!supportsVoiceOutput}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              viewBox="0 0 24 24"
+                              focusable="false"
+                            >
+                              <path d="M4 9v6h4l5 4V5L8 9H4Z" />
+                              <path d="M16 9a5 5 0 0 1 0 6" />
+                              <path d="M18.5 6.5a9 9 0 0 1 0 11" />
+                            </svg>
+                          </button>
                           {index === messages.length - 1 ? (
                             <button
                               type="button"
@@ -1037,6 +1146,7 @@ function Chat() {
               placeholder="Share what’s on your mind..."
               value={draft}
               aria-label="Message to Sakhi"
+              disabled={isLoading || isSaving}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
