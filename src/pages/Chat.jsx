@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
@@ -87,6 +87,8 @@ function Chat() {
   const [error, setError] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [latestReply, setLatestReply] = useState("");
+  const [latestReplyMessageId, setLatestReplyMessageId] = useState(null);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
   const [speechVoices, setSpeechVoices] = useState([]);
   const [showDailyCheckIn, setShowDailyCheckIn] = useState(false);
   const [isCheckInSubmitting, setIsCheckInSubmitting] = useState(false);
@@ -103,6 +105,7 @@ function Chat() {
   const chatEndRef = useRef(null);
   const firstCheckInOptionRef = useRef(null);
   const messageInputRef = useRef(null);
+  const speakingMessageIdRef = useRef(null);
 
   const SpeechRecognition = useMemo(
     () => window.SpeechRecognition || window.webkitSpeechRecognition || null,
@@ -112,6 +115,85 @@ function Chat() {
   const supportsVoiceInput = Boolean(SpeechRecognition);
   const supportsVoiceOutput = "speechSynthesis" in window;
   const selectedVoice = getPreferredVoice(speechVoices);
+
+  const stopSpeech = useCallback((messageId) => {
+    const currentMessageId = speakingMessageIdRef.current;
+    if (!currentMessageId || (messageId && messageId !== currentMessageId)) {
+      return;
+    }
+
+    speakingMessageIdRef.current = null;
+    setSpeakingMessageId(null);
+    setMessageActionStatus((current) => ({
+      ...current,
+      [currentMessageId]: "",
+    }));
+    window.speechSynthesis.cancel();
+  }, []);
+
+  const speakReply = useCallback(
+    (messageId, content) => {
+      if (!supportsVoiceOutput || !messageId) {
+        return;
+      }
+
+      speakingMessageIdRef.current = null;
+      window.speechSynthesis.cancel();
+      speakingMessageIdRef.current = messageId;
+      setSpeakingMessageId(messageId);
+      setMessageActionStatus((current) => ({
+        ...current,
+        [messageId]: "Playing reply",
+      }));
+
+      const utterance = new SpeechSynthesisUtterance(content);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      const voice =
+        selectedVoice || getPreferredVoice(window.speechSynthesis.getVoices());
+      if (voice) {
+        utterance.voice = voice;
+      }
+
+      utterance.onend = () => {
+        if (speakingMessageIdRef.current === messageId) {
+          speakingMessageIdRef.current = null;
+          setSpeakingMessageId(null);
+          setMessageActionStatus((current) => ({
+            ...current,
+            [messageId]: "",
+          }));
+        }
+      };
+      utterance.onerror = (speechError) => {
+        if (speakingMessageIdRef.current !== messageId) {
+          return;
+        }
+
+        speakingMessageIdRef.current = null;
+        setSpeakingMessageId(null);
+        if (
+          speechError.error === "canceled" ||
+          speechError.error === "interrupted"
+        ) {
+          setMessageActionStatus((current) => ({
+            ...current,
+            [messageId]: "",
+          }));
+          return;
+        }
+
+        console.error("Could not play assistant reply:", speechError);
+        setMessageActionStatus((current) => ({
+          ...current,
+          [messageId]: "Could not play voice reply",
+        }));
+      };
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [selectedVoice, supportsVoiceOutput],
+  );
 
   useEffect(() => {
     if (!supportsVoiceOutput) {
@@ -198,7 +280,9 @@ function Chat() {
 
   const openConversation = async (conversation) => {
     closeHistoryOnSmallScreen();
+    stopSpeech();
     setRecentConversationPrompt(null);
+    setLatestReplyMessageId(null);
     setActiveConversation(conversation);
     setDraft("");
     setError("");
@@ -220,6 +304,8 @@ function Chat() {
     setIsLoading(true);
     setError("");
     setRecentConversationPrompt(null);
+    setLatestReplyMessageId(null);
+    stopSpeech();
 
     try {
       const created = await createConversation(user.uid);
@@ -380,21 +466,17 @@ function Chat() {
   }, []);
 
   useEffect(() => {
-    if (!latestReply || !supportsVoiceOutput) {
+    if (!latestReply || !latestReplyMessageId || !supportsVoiceOutput) {
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(latestReply);
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    const voice =
-      selectedVoice || getPreferredVoice(window.speechSynthesis.getVoices());
-    if (voice) {
-      utterance.voice = voice;
-    }
-    window.speechSynthesis.speak(utterance);
-  }, [latestReply, selectedVoice, supportsVoiceOutput]);
+    speakReply(latestReplyMessageId, latestReply);
+  }, [
+    latestReply,
+    latestReplyMessageId,
+    speakReply,
+    supportsVoiceOutput,
+  ]);
 
   const handleLogout = async () => {
     try {
@@ -562,6 +644,7 @@ function Chat() {
       };
       setMessages((currentMessages) => [...currentMessages, assistantMessage]);
       setLatestReply(assistantReply);
+      setLatestReplyMessageId(assistantMessageId);
 
       try {
         const updatedList = await loadConversationList(user.uid);
@@ -586,6 +669,7 @@ function Chat() {
     } catch (caughtError) {
       console.error("Chat request failed:", caughtError);
       setLatestReply("");
+      setLatestReplyMessageId(null);
       setError(
         "I’m having trouble replying right now. Please try again in a moment.",
       );
@@ -666,44 +750,6 @@ function Chat() {
     }
   };
 
-  const handleSpeakMessage = (message) => {
-    if (!supportsVoiceOutput) {
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(message.content);
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    const voice =
-      selectedVoice || getPreferredVoice(window.speechSynthesis.getVoices());
-    if (voice) {
-      utterance.voice = voice;
-    }
-
-    utterance.onstart = () => {
-      setMessageActionStatus((current) => ({
-        ...current,
-        [message.id]: "Playing reply",
-      }));
-    };
-    utterance.onend = () => {
-      setMessageActionStatus((current) => ({
-        ...current,
-        [message.id]: "",
-      }));
-    };
-    utterance.onerror = (speechError) => {
-      console.error("Could not play assistant reply:", speechError);
-      setMessageActionStatus((current) => ({
-        ...current,
-        [message.id]: "Could not play voice reply",
-      }));
-    };
-
-    window.speechSynthesis.speak(utterance);
-  };
-
   const handleRetryMessage = async (message) => {
     const messageIndex = messages.findIndex((item) => item.id === message.id);
     const previousUserMessage = messages
@@ -739,6 +785,7 @@ function Chat() {
         ),
       );
       setLatestReply(assistantReply);
+      setLatestReplyMessageId(message.id);
       setMessageActionStatus((current) => ({
         ...current,
         [message.id]: "",
@@ -1064,7 +1111,9 @@ function Chat() {
                           <button
                             type="button"
                             className="message-speak-button"
-                            onClick={() => handleSpeakMessage(message)}
+                            onClick={() =>
+                              speakReply(message.id, message.content)
+                            }
                             aria-label="Play Sakhi's reply aloud"
                             title="Play reply aloud"
                             disabled={!supportsVoiceOutput}
@@ -1077,6 +1126,25 @@ function Chat() {
                               <path d="M4 9v6h4l5 4V5L8 9H4Z" />
                               <path d="M16 9a5 5 0 0 1 0 6" />
                               <path d="M18.5 6.5a9 9 0 0 1 0 11" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="message-speak-button message-stop-button"
+                            onClick={() => stopSpeech(message.id)}
+                            aria-label="Stop Sakhi's spoken reply"
+                            title="Stop speaking"
+                            disabled={
+                              !supportsVoiceOutput ||
+                              speakingMessageId !== message.id
+                            }
+                          >
+                            <svg
+                              aria-hidden="true"
+                              viewBox="0 0 24 24"
+                              focusable="false"
+                            >
+                              <rect x="7" y="7" width="10" height="10" rx="1" />
                             </svg>
                           </button>
                           {index === messages.length - 1 ? (

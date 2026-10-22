@@ -1924,6 +1924,15 @@ h1 {
   stroke-width: 1.8;
 }
 
+.message-action-buttons .message-stop-button:not(:disabled) {
+  color: #9a6257;
+}
+
+.message-action-buttons .message-stop-button:hover:not(:disabled) {
+  border-color: rgba(154, 98, 87, 0.2);
+  background: #f8eeea;
+}
+
 .message-action-buttons button:hover:not(:disabled) {
   border-color: rgba(84, 125, 105, 0.13);
   background: #edf3e9;
