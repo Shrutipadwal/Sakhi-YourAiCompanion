@@ -5,9 +5,9 @@ const Landing = () => {
     <main className="page-shell landing-shell">
       <div className="landing-page-content">
         <header className="landing-nav">
-          <a className="landing-brand" href="/" aria-label="Aikya home">
-            <span className="landing-brand-mark">a</span>
-            Aikya
+          <a className="landing-brand" href="/" aria-label="Sakhi home">
+            <span className="landing-brand-mark">s</span>
+            Sakhi
           </a>
           <nav aria-label="Main navigation">
             <a href="#about">About</a>
@@ -110,7 +110,7 @@ const Landing = () => {
             <p className="landing-eyebrow">
               A calm companion for everyday moments
             </p>
-            <h1 className="landing-hero-title">Aikya</h1>
+            <h1 className="landing-hero-title">Sakhi</h1>
             <p className="landing-hero-tagline">
               Your AI voice companion that listens, remembers, and grows with
               you.
@@ -121,9 +121,9 @@ const Landing = () => {
                 You are not alone. Take a breath, and start wherever you are.
               </p>
               <p>
-                Aikya is a gentle space to talk through everyday feelings, find
+                Sakhi is a gentle space to talk through everyday feelings, find
                 encouragement for study or career goals, and reflect without
-                pressure. You can type or use voice, and Aikya can remember
+                pressure. You can type or use voice, and Sakhi can remember
                 useful details you choose to share so conversations feel more
                 personal over time.
               </p>
@@ -143,7 +143,7 @@ const Landing = () => {
 
           <div className="landing-card-wrapper">
             <GoogleAuth
-              title="Welcome to Aikya"
+              title="Welcome to Sakhi"
               subtitle="Sign in with Google to begin your supportive companion chat."
               containerClassName="landing-auth-container"
             />
@@ -153,10 +153,10 @@ const Landing = () => {
         <section className="landing-about" id="about">
           <div className="landing-about-intro">
             <div className="landing-section-heading">
-              <span>About Aikya</span>
+              <span>About Sakhi</span>
               <h2>A thoughtful companion for the moments in between.</h2>
               <p>
-                Aikya brings supportive conversation, practical encouragement,
+                Sakhi brings supportive conversation, practical encouragement,
                 and personal reflection into one calm place. It is here to
                 listen and help you explore your next step—not to judge or rush
                 you.
@@ -186,7 +186,7 @@ const Landing = () => {
               <span aria-hidden="true">♡</span>
               <h3>A listening space</h3>
               <p>
-                Share what is on your mind at your own pace. Aikya responds with
+                Share what is on your mind at your own pace. Sakhi responds with
                 warmth and helps you sort through thoughts one step at a time.
               </p>
             </article>
@@ -227,7 +227,7 @@ const Landing = () => {
               <div>
                 <h3>Talk it through</h3>
                 <p>
-                  Aikya uses your message and recent conversation to offer a
+                  Sakhi uses your message and recent conversation to offer a
                   relevant, supportive reply.
                 </p>
               </div>
@@ -246,7 +246,7 @@ const Landing = () => {
         </section>
 
         <footer className="landing-footer">
-          <span>Aikya</span>
+          <span>Sakhi</span>
           <span>A little more room to be yourself.</span>
         </footer>
       </div>

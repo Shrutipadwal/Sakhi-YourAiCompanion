@@ -1,23 +1,23 @@
-# Aikya
+# Sakhi
 
-Aikya is an AI companion for supportive, personalized conversations. It can remember useful details shared in chat and use them as context in future replies.
+Sakhi is an AI companion for supportive, personalized conversations. It can remember useful details shared in chat and use them as context in future replies.
 
 **Live demo:** https://sakhi-youraicompanion.netlify.app/
 
 ## Features
 
 - **Google sign-in:** Firebase Authentication protects the chat from signed-out visitors.
-- **AI conversations:** Chat with Aikya for emotional support, study motivation, career guidance, wellness check-ins, or general conversation.
+- **AI conversations:** Chat with Sakhi for emotional support, study motivation, career guidance, wellness check-ins, or general conversation.
 - **Voice input:** Speak a message using browser speech recognition in Indian English (`en-IN`) where supported.
-- **Spoken replies:** Aikya prefers a Google Hindi voice when available, then Microsoft Heera, and otherwise uses the device's default voice. Voice selection is not shown in the chat interface.
+- **Spoken replies:** Sakhi prefers a Google Hindi voice when available, then Microsoft Heera, and otherwise uses the device's default voice. Voice selection is not shown in the chat interface.
 - **Conversation history:** Create chats, switch between saved conversations, and delete conversations.
 - **Resume recent chat:** When returning, continue the most recently updated conversation or start a new chat from a dismissible prompt.
-- **Chat titles:** Aikya creates a title from the first message in a new chat; users can rename chats from the sidebar.
+- **Chat titles:** Sakhi creates a title from the first message in a new chat; users can rename chats from the sidebar.
 - **Daily check-ins:** Share a quick mood check-in once per local day to start a supportive conversation.
-- **Reply actions:** Copy Aikya's replies, play or stop spoken playback, or retry the latest reply.
-- **Personalized memory:** Aikya can extract longer-term details, such as goals, interests, study habits, preferences, and important people. It stores these in the user's Firestore profile and uses them as relevant context in later chats.
+- **Reply actions:** Copy Sakhi's replies, play or stop spoken playback, or retry the latest reply.
+- **Personalized memory:** Sakhi can extract longer-term details, such as goals, interests, study habits, preferences, and important people. It stores these in the user's Firestore profile and uses them as relevant context in later chats.
 
-Voice features depend on browser and device support and may work differently between them. Voice input uses the browser's Web Speech API; some browsers may not provide speech recognition, or may require microphone permission and an internet connection. Spoken replies use voices provided by the browser or operating system. Aikya prefers Google Hindi, uses Microsoft Heera if Google Hindi is unavailable, and uses the device default if neither voice is available. If voice input is unavailable, users can type messages.
+Voice features depend on browser and device support and may work differently between them. Voice input uses the browser's Web Speech API; some browsers may not provide speech recognition, or may require microphone permission and an internet connection. Spoken replies use voices provided by the browser or operating system. Sakhi prefers Google Hindi, uses Microsoft Heera if Google Hindi is unavailable, and uses the device default if neither voice is available. If voice input is unavailable, users can type messages.
 
 - **My Journey:** View your personal growth profile at `/journey` from the chat history sidebar. This page is available to signed-in users.
 
@@ -86,9 +86,9 @@ npm run preview  # Preview the production build locally
 
 1. Sign in with Google.
 2. Start a conversation by typing or using voice input.
-3. Aikya sends the message, recent conversation history, and saved memory context to OpenRouter.
+3. Sakhi sends the message, recent conversation history, and saved memory context to OpenRouter.
 4. The reply and conversation messages are saved to the signed-in user's Firestore data.
-5. Aikya asks the AI to extract useful long-term details from the latest user message and updates the memory profile when it finds new information.
+5. Sakhi asks the AI to extract useful long-term details from the latest user message and updates the memory profile when it finds new information.
 
 Memory extraction is best-effort: it depends on the AI response and may not identify every detail. It is designed for stable personal context, not temporary moods.
 

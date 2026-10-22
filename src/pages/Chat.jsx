@@ -805,7 +805,7 @@ function Chat() {
       }));
     } catch (retryError) {
       console.error("Failed to retry assistant response:", retryError);
-      setError("Unable to retry Aikya's reply. Please try again.");
+      setError("Unable to retry Sakhi's reply. Please try again.");
     } finally {
       setRetryingMessageId(null);
       setIsLoading(false);
@@ -827,7 +827,7 @@ function Chat() {
           <div className="sidebar-brand">
             <span className="sidebar-brand-mark">s</span>
             <span>
-              <strong>Aikya – AI Companion</strong>
+              <strong>Sakhi – AI Companion</strong>
               <small>A calm space for a gentle conversation.</small>
             </span>
           </div>
@@ -1061,7 +1061,7 @@ function Chat() {
                   </span>
                   <h3 id="check-in-title">How are you feeling today?</h3>
                   <p id="check-in-description">
-                    A small check-in can help Aikya meet you where you are.
+                    A small check-in can help Sakhi meet you where you are.
                   </p>
                 </div>
                 <div className="check-in-options">
@@ -1103,7 +1103,7 @@ function Chat() {
                   className={`message-bubble ${message.role}`}
                 >
                   <div className="bubble-avatar">
-                    {message.role === "user" ? "You" : "Aikya"}
+                    {message.role === "user" ? "You" : "Sakhi"}
                   </div>
                   <div className="message-body">
                     <div className="bubble-content">{message.content}</div>
@@ -1114,7 +1114,7 @@ function Chat() {
                           <button
                             type="button"
                             onClick={() => handleCopyMessage(message)}
-                            aria-label="Copy Aikya's reply"
+                            aria-label="Copy Sakhi's reply"
                           >
                             Copy
                           </button>
@@ -1124,7 +1124,7 @@ function Chat() {
                             onClick={() =>
                               speakReply(message.id, message.content)
                             }
-                            aria-label="Play Aikya's reply aloud"
+                            aria-label="Play Sakhi's reply aloud"
                             title="Play reply aloud"
                             disabled={!canSpeakReply}
                           >
@@ -1142,7 +1142,7 @@ function Chat() {
                             type="button"
                             className="message-speak-button message-stop-button"
                             onClick={() => stopSpeech(message.id)}
-                            aria-label="Stop Aikya's spoken reply"
+                            aria-label="Stop Sakhi's spoken reply"
                             title="Stop speaking"
                             disabled={
                               !supportsVoiceOutput ||
@@ -1184,7 +1184,7 @@ function Chat() {
 
               {isLoading && (
                 <article className="message-bubble assistant typing">
-                  <div className="bubble-avatar">Aikya</div>
+                  <div className="bubble-avatar">Sakhi</div>
                   <div className="bubble-content">Thinking gently…</div>
                 </article>
               )}
@@ -1220,7 +1220,7 @@ function Chat() {
               className="message-input"
               placeholder="Share what’s on your mind..."
               value={draft}
-              aria-label="Message to Aikya"
+              aria-label="Message to Sakhi"
               disabled={isLoading || isSaving}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
