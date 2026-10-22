@@ -27,23 +27,11 @@ const Landing = () => {
               </span>
               <svg viewBox="0 0 200 230" className="hero-person-illustration">
                 <defs>
-                  <linearGradient
-                    id="hero-hair"
-                    x1="0"
-                    y1="0"
-                    x2="1"
-                    y2="1"
-                  >
+                  <linearGradient id="hero-hair" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0" stopColor="#72534b" />
                     <stop offset="1" stopColor="#493c39" />
                   </linearGradient>
-                  <linearGradient
-                    id="hero-top"
-                    x1="0"
-                    y1="0"
-                    x2="1"
-                    y2="1"
-                  >
+                  <linearGradient id="hero-top" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0" stopColor="#a7c6a5" />
                     <stop offset="1" stopColor="#71977d" />
                   </linearGradient>
@@ -129,13 +117,15 @@ const Landing = () => {
             </p>
 
             <div className="landing-hero-copy">
-              <p>You are not alone. Take a breath, and start wherever you are.</p>
               <p>
-                Sakhi is a gentle space to talk through everyday feelings,
-                find encouragement for study or career goals, and reflect
-                without pressure. You can type or use voice, and Sakhi can
-                remember useful details you choose to share so conversations
-                feel more personal over time.
+                You are not alone. Take a breath, and start wherever you are.
+              </p>
+              <p>
+                Sakhi is a gentle space to talk through everyday feelings, find
+                  encouragement for study or career goals, and reflect without
+                pressure. You can type or use voice, and Sakhi can remember
+                useful details you choose to share so conversations feel more
+                personal over time.
               </p>
             </div>
 
@@ -196,9 +186,8 @@ const Landing = () => {
               <span aria-hidden="true">♡</span>
               <h3>A listening space</h3>
               <p>
-                Share what is on your mind at your own pace. Sakhi responds
-                with warmth and helps you sort through thoughts one step at a
-                time.
+                Share what is on your mind at your own pace. Sakhi responds with
+                warmth and helps you sort through thoughts one step at a time.
               </p>
             </article>
             <article className="landing-feature-card">

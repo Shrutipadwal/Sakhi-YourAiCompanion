@@ -47,10 +47,9 @@ function getPreferredVoice(voices) {
       (/(hindi|हिन्दी|हिंदी)/i.test(voice.name) ||
         voice.lang.toLowerCase().startsWith("hi")),
   );
-  const ravi = voices.find((voice) => /\bravi\b/i.test(voice.name));
   const heera = voices.find((voice) => /heera/i.test(voice.name));
 
-  return googleHindi || ravi || heera || null;
+  return googleHindi || heera || null;
 }
 
 function formatTime(timestamp) {
@@ -116,9 +115,7 @@ function Chat() {
 
   const supportsVoiceInput = Boolean(SpeechRecognition);
   const supportsVoiceOutput = "speechSynthesis" in window;
-  const selectedVoice = getPreferredVoice(speechVoices);
-  const canSpeakReply =
-    supportsVoiceOutput && speechVoicesReady && Boolean(selectedVoice);
+  const canSpeakReply = supportsVoiceOutput && speechVoicesReady;
 
   const stopSpeech = useCallback((messageId) => {
     const currentMessageId = speakingMessageIdRef.current;
@@ -147,14 +144,6 @@ function Chat() {
         }));
         return;
       }
-      if (!selectedVoice) {
-        setMessageActionStatus((current) => ({
-          ...current,
-          [messageId]: "Google Hindi, Ravi, or Heera is not available",
-        }));
-        return;
-      }
-
       speakingMessageIdRef.current = null;
       window.speechSynthesis.cancel();
       speakingMessageIdRef.current = messageId;
@@ -167,7 +156,12 @@ function Chat() {
       const utterance = new SpeechSynthesisUtterance(content);
       utterance.rate = 1;
       utterance.pitch = 1;
-      utterance.voice = selectedVoice;
+      const selectedVoice =
+        getPreferredVoice(speechVoices) ||
+        getPreferredVoice(window.speechSynthesis.getVoices());
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
 
       utterance.onend = () => {
         if (speakingMessageIdRef.current === messageId) {
@@ -206,7 +200,7 @@ function Chat() {
 
       window.speechSynthesis.speak(utterance);
     },
-    [selectedVoice, speechVoicesReady, supportsVoiceOutput],
+    [speechVoices, speechVoicesReady, supportsVoiceOutput],
   );
 
   useEffect(() => {
@@ -1225,11 +1219,6 @@ function Chat() {
               {voiceError ? (
                 <span className="status-text warning" role="status">
                   {voiceError}
-                </span>
-              ) : null}
-              {supportsVoiceOutput && speechVoicesReady && !selectedVoice ? (
-                <span className="status-text warning" role="status">
-                  Spoken replies need Google Hindi, Ravi, or Heera on this device.
                 </span>
               ) : null}
             </div>
