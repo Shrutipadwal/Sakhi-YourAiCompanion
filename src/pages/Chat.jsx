@@ -80,7 +80,8 @@ function Chat() {
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
-  const [recentConversationPrompt, setRecentConversationPrompt] = useState(null);
+  const [recentConversationPrompt, setRecentConversationPrompt] =
+    useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -218,7 +219,10 @@ function Chat() {
 
     updateVoices();
     const handleVoicesChanged = () => updateVoices(true);
-    window.speechSynthesis.addEventListener("voiceschanged", handleVoicesChanged);
+    window.speechSynthesis.addEventListener(
+      "voiceschanged",
+      handleVoicesChanged,
+    );
 
     return () => {
       window.speechSynthesis.removeEventListener(
@@ -487,12 +491,7 @@ function Chat() {
     }
 
     speakReply(latestReplyMessageId, latestReply);
-  }, [
-    latestReply,
-    latestReplyMessageId,
-    speakReply,
-    supportsVoiceOutput,
-  ]);
+  }, [latestReply, latestReplyMessageId, speakReply, supportsVoiceOutput]);
 
   const handleLogout = async () => {
     try {
@@ -795,9 +794,7 @@ function Chat() {
       );
       setMessages((current) =>
         current.map((item) =>
-          item.id === message.id
-            ? { ...item, content: assistantReply }
-            : item,
+          item.id === message.id ? { ...item, content: assistantReply } : item,
         ),
       );
       setLatestReply(assistantReply);
@@ -808,7 +805,7 @@ function Chat() {
       }));
     } catch (retryError) {
       console.error("Failed to retry assistant response:", retryError);
-      setError("Unable to retry Sakhi's reply. Please try again.");
+      setError("Unable to retry Aikya's reply. Please try again.");
     } finally {
       setRetryingMessageId(null);
       setIsLoading(false);
@@ -830,16 +827,14 @@ function Chat() {
           <div className="sidebar-brand">
             <span className="sidebar-brand-mark">s</span>
             <span>
-              <strong>Sakhi – AI Companion</strong>
+              <strong>Aikya – AI Companion</strong>
               <small>A calm space for a gentle conversation.</small>
             </span>
           </div>
           <div className="sidebar-header">
             <div>
               <h2>Chat history</h2>
-              <p className="sidebar-subtitle">
-                Pick up where you left off.
-              </p>
+              <p className="sidebar-subtitle">Pick up where you left off.</p>
             </div>
             <div className="sidebar-header-actions">
               <button
@@ -1005,8 +1000,7 @@ function Chat() {
                   ”?
                 </strong>
                 <span className="continue-conversation-time">
-                  Last active{" "}
-                  {formatTime(recentConversationPrompt.updatedAt)}
+                  Last active {formatTime(recentConversationPrompt.updatedAt)}
                 </span>
               </div>
               <div className="continue-conversation-actions">
@@ -1067,7 +1061,7 @@ function Chat() {
                   </span>
                   <h3 id="check-in-title">How are you feeling today?</h3>
                   <p id="check-in-description">
-                    A small check-in can help Sakhi meet you where you are.
+                    A small check-in can help Aikya meet you where you are.
                   </p>
                 </div>
                 <div className="check-in-options">
@@ -1109,7 +1103,7 @@ function Chat() {
                   className={`message-bubble ${message.role}`}
                 >
                   <div className="bubble-avatar">
-                    {message.role === "user" ? "You" : "Sakhi"}
+                    {message.role === "user" ? "You" : "Aikya"}
                   </div>
                   <div className="message-body">
                     <div className="bubble-content">{message.content}</div>
@@ -1120,7 +1114,7 @@ function Chat() {
                           <button
                             type="button"
                             onClick={() => handleCopyMessage(message)}
-                            aria-label="Copy Sakhi's reply"
+                            aria-label="Copy Aikya's reply"
                           >
                             Copy
                           </button>
@@ -1130,7 +1124,7 @@ function Chat() {
                             onClick={() =>
                               speakReply(message.id, message.content)
                             }
-                            aria-label="Play Sakhi's reply aloud"
+                            aria-label="Play Aikya's reply aloud"
                             title="Play reply aloud"
                             disabled={!canSpeakReply}
                           >
@@ -1148,7 +1142,7 @@ function Chat() {
                             type="button"
                             className="message-speak-button message-stop-button"
                             onClick={() => stopSpeech(message.id)}
-                            aria-label="Stop Sakhi's spoken reply"
+                            aria-label="Stop Aikya's spoken reply"
                             title="Stop speaking"
                             disabled={
                               !supportsVoiceOutput ||
@@ -1178,10 +1172,7 @@ function Chat() {
                           ) : null}
                         </div>
                         {messageActionStatus[message.id] ? (
-                          <span
-                            className="message-action-status"
-                            role="status"
-                          >
+                          <span className="message-action-status" role="status">
                             {messageActionStatus[message.id]}
                           </span>
                         ) : null}
@@ -1193,7 +1184,7 @@ function Chat() {
 
               {isLoading && (
                 <article className="message-bubble assistant typing">
-                  <div className="bubble-avatar">Sakhi</div>
+                  <div className="bubble-avatar">Aikya</div>
                   <div className="bubble-content">Thinking gently…</div>
                 </article>
               )}
@@ -1229,7 +1220,7 @@ function Chat() {
               className="message-input"
               placeholder="Share what’s on your mind..."
               value={draft}
-              aria-label="Message to Sakhi"
+              aria-label="Message to Aikya"
               disabled={isLoading || isSaving}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {

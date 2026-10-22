@@ -122,10 +122,10 @@ function MyJourney() {
         <header className="journey-header">
           <div className="journey-heading-copy">
             <span className="journey-eyebrow">🌱 My Journey</span>
-            <h1>Here is what Sakhi remembers about you.</h1>
+            <h1>Here is what Aikya remembers about you.</h1>
             <p>
               This space is your personal growth profile — a calm view of what
-              Sakhi has learned about your goals, focus, motivation, and
+              Aikya has learned about your goals, focus, motivation, and
               preferences.
             </p>
           </div>
@@ -140,7 +140,7 @@ function MyJourney() {
           ) : (
             <div className="journey-empty">
               <p>
-                Sakhi is still learning about you. Share more in chat and this
+                Aikya is still learning about you. Share more in chat and this
                 page will grow.
               </p>
             </div>

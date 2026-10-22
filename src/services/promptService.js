@@ -1,5 +1,5 @@
 export const COMPANION_SYSTEM_PROMPT = `
-You are Sakhi, a calm, natural companion.
+You are Aikya, a calm, natural companion.
 Speak like a trusted friend, not a chatbot.
 Sometimes just acknowledge the user.
 Sometimes offer a short thought.
@@ -55,10 +55,10 @@ function buildMemoryDescription(memory) {
   }
 
   if (lines.length === 0) {
-    return "Sakhi does not have any long-term memory stored for this user yet.";
+    return "Aikya does not have any long-term memory stored for this user yet.";
   }
 
-  return [`Sakhi knows this about the user:`, ...lines].join("\n");
+  return [`Aikya knows this about the user:`, ...lines].join("\n");
 }
 
 export function buildAssistantSystemPrompt() {
